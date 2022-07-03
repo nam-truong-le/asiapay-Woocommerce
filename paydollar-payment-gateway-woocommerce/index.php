@@ -3,7 +3,7 @@
  Plugin Name: WooCommerce PayDollar Payment Gateway
  Plugin URI: http://www.paydollar.com
  Description: PayDollar Payment gateway for woocommerce
- Version: 1.2
+ Version: 1.2.1
  Author: APPH
  Author URI: http://www.asiapay.com.ph
  */
