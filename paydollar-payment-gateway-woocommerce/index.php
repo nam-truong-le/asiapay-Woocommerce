@@ -3,7 +3,7 @@
  Plugin Name: WooCommerce PayDollar Payment Gateway
  Plugin URI: http://www.paydollar.com
  Description: PayDollar Payment gateway for woocommerce
- Version: 1.2.1
+ Version: 1.2.2
  Author: APPH
  Author URI: http://www.asiapay.com.ph
  */
@@ -28,7 +28,7 @@ function woocommerce_paydollar_init(){
 			$this -> merchant_id = 				$this -> settings['merchant_id'];
 			$this -> pay_method = 				$this -> settings['pay_method'];
 			$this -> pay_type = 				$this -> settings['pay_type'];
-			$this -> curr_code = 				$this -> getCurrCode(get_woocommerce_currency());
+			$this -> curr_code = 				$this -> getCurrCode('VND');
 			$this -> language = 				$this -> settings['language'];
 			$this -> secure_hash_secret = 		$this -> settings['secure_hash_secret'];
 			$this -> prefix = 					$this -> settings['prefix'];
@@ -256,18 +256,20 @@ function woocommerce_paydollar_init(){
 			$success_url = esc_url( add_query_arg( 'utm_nooverride', '1', $this->get_return_url( $order ) ) );
 			$fail_url = esc_url( $order->get_cancel_order_url() );
 			$cancel_url = esc_url( $order->get_cancel_order_url() );
-			
+
+            $usd_exchange_rate = get_option('vs2_usd_exchange_rate');
+            $vnd_total = round(floatval($order -> order_total) * floatval($usd_exchange_rate));
 			
 			$secureHash = '';
 			if($this -> secure_hash_secret != ''){
-				$secureHash = $this -> generatePaymentSecureHash($this -> merchant_id, $orderRef, $this -> curr_code, $order -> order_total, $this -> pay_type, $this -> secure_hash_secret);
+				$secureHash = $this -> generatePaymentSecureHash($this -> merchant_id, $orderRef, $this -> curr_code, $vnd_total, $this -> pay_type, $this -> secure_hash_secret);
 			}
 					
 			$remarks = '';
 			
 			$paydollar_args = array(
 				'orderRef' => 		$orderRef,
-				'amount' => 		$order -> order_total,			
+				'amount' => 		$vnd_total,
 		    	'merchantId' => 	$this -> merchant_id, 				 
 				'payMethod' => 		$this -> pay_method, 
 				'payType'	=> 		$this -> pay_type,
@@ -355,7 +357,7 @@ function woocommerce_paydollar_init(){
 					if($order -> status != 'completed'){
 						
 						$secureHashArr = explode ( ',', $secureHash );
-						while ( list ( $key, $value ) = each ( $secureHashArr ) ) {
+                        foreach ($secureHashArr as $value) {
 							$checkSecureHash = $this->verifyPaymentDatafeed($src, $prc, $successCode, $ref, $payRef, $cur, $amt, $payerAuth, $this->secure_hash_secret, $value);
 							if($checkSecureHash){
 								break;
